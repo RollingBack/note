@@ -277,8 +277,6 @@ MySQL主从库设置
 
 - 执行完恢复工作，执行mysql_upgrade，把数据升级成从库版本。
 
-- 恢复binlog，mysqlbinlog mysql-bin.**** | mysql -u root -p
-
 - 修改启动选项增加如下选项：--gtid_mode=ON --log-bin --log-slave-update --enforce-gtid-consistency
 
 - 启动mysql，进入mysql终端，把master指向主库：
@@ -290,8 +288,8 @@ MySQL主从库设置
         master_user='#主库设置第一步中的账号',
         master_password='#主库设置第一步中的账号的密码',
         master_port=3306,
-        master_log_file='#从库设置中下载并导入的binlog的下一个binlog',
-        master_log_pos=4#未经证实，但是似乎阿里云的binlog位置都是从4开始的，可以用mysqlbinlog查看一下主库的前几行;
+        master_log_file='#备份里的xtrabackup_binlog_info有',
+        master_log_pos=4#备份里的xtrabackup_binlog_info有;
 
 - 终端中输入start slave;开始同步。如果有报错，需要手动更新部分数据表。然后stop slave; start slave;
 
