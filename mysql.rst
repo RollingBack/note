@@ -22,18 +22,18 @@ ubuntu server下安装了MySQL 5.5数据库，然后在windows下通过Navicat f
 
 解决方案如下：
 
-	- 授权
+    - 授权
 
-	.. code-block:: sh
+    .. code-block:: sh
 
-		mysql>grant all privileges on *.*  to  'root'@'%'  identified by 'youpassword'  with grant option;
-		mysql>flush privileges;
+        mysql>grant all privileges on *.*  to  'root'@'%'  identified by 'youpassword'  with grant option;
+        mysql>flush privileges;
 
-	- 修改/etc/mysql/my.conf
+    - 修改/etc/mysql/my.conf
 
-	找到bind-address = 127.0.0.1这一行
+    找到bind-address = 127.0.0.1这一行
 
-	改为bind-address = 0.0.0.0即可
+    改为bind-address = 0.0.0.0即可
 
 **4.** SQL_CALC_FOUND_ROWS
 SELECT FOUND_ROWS();可以取到结果集条数。SQL语句比较复杂的情况下索引无效，性能可能不如count(*)。
@@ -51,17 +51,17 @@ ifnull(`fieldname`,0) 如果fieldname为空值null,那么返回0
 
 .. code-block:: sql
 
-	select `fieldname` from table1 where ...
-	union
-	select `fieldname` from table2 where ...
+    select `fieldname` from table1 where ...
+    union
+    select `fieldname` from table2 where ...
 
 第二种，union all，直接集合不做任何处理
 
 .. code-block:: sql
 
-	select `fieldname` from table1 where ...
-	union all
-	select `fieldname` from table2 where ...
+    select `fieldname` from table1 where ...
+    union all
+    select `fieldname` from table2 where ...
 
 集合的字段类型应该相同
 
@@ -69,27 +69,27 @@ ifnull(`fieldname`,0) 如果fieldname为空值null,那么返回0
 
 .. code-block:: sql
 
-	LOAD DATA INFILE "c:/sss.csv" INTO TABLE `table_name` CHARACTER SET utf8 LINES \
-	TERMINATED BY '\r' FIELDS TERMINATED BY ',';
-	SELECT * INTO OUTFILE 'file_name' FROM tbl_name [where 条件];
+    LOAD DATA INFILE "c:/sss.csv" INTO TABLE `table_name` CHARACTER SET utf8 LINES
+    TERMINATED BY '\r' FIELDS TERMINATED BY ',';
+    SELECT * INTO OUTFILE 'file_name' FROM tbl_name where 1;
 
 **9.** 数据库位置迁移（Ubuntu）。不要以为很简单，这里面有个坑，防火墙。
 
 .. code-block:: sh
-	:linenos:
+    :linenos:
 
-	/etc/init.d/mysql stop                #停止mysql服务
-	vim /etc/mysql/my.cnf                 #编辑mysql配置文件
-		datadir = /data/mysql             #修改datadir选项位置
-	mv -R /var/lib/mysql/ /data/          #把数据库文件放到新的位置
-	chown -R mysql:mysql /data            #确保新位置的用户和用户组及权限正确
-	vim /etc/apparmor.d/usr.sbin.mysqld   #编辑防火墙，注释以前位置，加入新位置
-		#/var/lib/mysql/ r,
-		#/var/lib/mysql/** rwk,
-		/data/mysql/ r,
-		/data/mysql/** rwk,	
-	/etc/init.d/apparmor reload           #使防火墙配置生效
-	/etc/init.d/mysql start               #启动mysql
+    /etc/init.d/mysql stop                #停止mysql服务
+    vim /etc/mysql/my.cnf                 #编辑mysql配置文件
+        datadir = /data/mysql             #修改datadir选项位置
+    mv -R /var/lib/mysql/ /data/          #把数据库文件放到新的位置
+    chown -R mysql:mysql /data            #确保新位置的用户和用户组及权限正确
+    vim /etc/apparmor.d/usr.sbin.mysqld   #编辑防火墙，注释以前位置，加入新位置
+        #/var/lib/mysql/ r,
+        #/var/lib/mysql/** rwk,
+        /data/mysql/ r,
+        /data/mysql/** rwk,
+    /etc/init.d/apparmor reload           #使防火墙配置生效
+    /etc/init.d/mysql start               #启动mysql
 
 **10.** 使用了无法缓存的语法。
 含有NOW(),CURDATE(),RAND()的SQL无法缓存，尽量避免使用。
@@ -113,7 +113,7 @@ MySQL主从库设置
 **2.**  修改主服务器master:
 ::
 
-   	#vi /etc/my.cnf
+    #vi /etc/my.cnf
     [mysqld]
     log-bin=mysql-bin   //[必须]启用二进制日志
     server-id=222       //[必须]服务器唯一ID，默认是1，一般取IP最后一段
@@ -121,9 +121,9 @@ MySQL主从库设置
 **3.**  修改从服务器slave:
 ::
 
-   	#vi /etc/my.cnf
+    #vi /etc/my.cnf
     [mysqld]
-    log-bin=mysql-bin   //[必须]启用二进制日志
+    relay_log=relay-log   //[必须]启用relay日志
     server-id=226       //[必须]服务器唯一ID，默认是1，一般取IP最后一段
 
 **4.**  重启两台服务器的mysql
@@ -147,7 +147,7 @@ MySQL主从库设置
    | mysql-bin.000004 |      308 |              |                  |
    +------------------+----------+--------------+------------------+
    1 row in set (0.00 sec)
-   注：执行完此步骤后不要再操作主服务器MYSQL，防止主服务器状态值变化
+   注：执行完此步骤后不要再操作主服务器MYSQL，防止主服务器状态值变化, 必要时请锁库
 
 **7.**  配置从服务器Slave：
 ::
@@ -248,3 +248,52 @@ MySQL主从库设置
 
 **10.** 完成：
     编写一shell脚本，用nagios监控slave的两个“yes”，如发现只有一个或零个“yes”，就表明主从有问题了，发短信警报吧。
+
+------------------------------------
+阿里云MySQL主从库设置
+------------------------------------
+
+**1.** 主库设置：
+
+- 从阿里云售后工程师处得知，具有读写权限的账号具有复制权限，建立一个具有读写权限的账号；
+
+- 把从库的IP加入主库白名单
+
+**2.** 从库设置：
+
+- 选用官方版本编译安装，图简便可以用lnmp.org的包，安装的mysql版本必须高于等于主库版本；
+
+- 从阿里云的控制台的备份恢复处下载最新的备份和最新的binlog;
+
+- 按照 https://help.aliyun.com/knowledge_detail/41817.html 的操作流程，把数据备份恢复到从库。过程中，不要完全按照指示进行恢复，把备份中的my.cnf合并到现在的/etc/my.cnf下面的几个选项要注释掉，不然mysql无法启动：
+
+::
+
+        #innodb_checksum_algorithm=innodb
+        #innodb_log_checksum_algorithm=innodb
+        #innodb_encrypt_algorithm=aes_128_ecb
+
+还需要设置一个不同于主库的server_id。
+
+- 执行完恢复工作，执行mysql_upgrade，把数据升级成从库版本。
+
+- 恢复binlog，mysqlbinlog mysql-bin.**** | mysql -u root -p
+
+- 修改启动选项增加如下选项：--gtid_mode=ON --log-bin --log-slave-update --enforce-gtid-consistency
+
+- 启动mysql，进入mysql终端，把master指向主库：
+
+::
+
+    change master to
+        master_host='#阿里云主库的hostname',
+        master_user='#主库设置第一步中的账号',
+        master_password='#主库设置第一步中的账号的密码',
+        master_port=3306,
+        master_log_file='#从库设置中下载并导入的binlog的下一个binlog',
+        master_log_pos=4#未经证实，但是似乎阿里云的binlog位置都是从4开始的，可以用mysqlbinlog查看一下主库的前几行;
+
+- 终端中输入start slave;开始同步。如果有报错，需要手动更新部分数据表。然后stop slave; start slave;
+
+
+
